@@ -22,12 +22,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { role, company, bullet, skills } = parsed.data;
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY?.trim();
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
-        { status: 500 }
+        { error: "OPENAI_API_KEY not set" },
+        { status: 400 }
       );
     }
 

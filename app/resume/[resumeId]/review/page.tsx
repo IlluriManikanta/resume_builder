@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { resumeStore } from "@/lib/store";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/db/prisma";
 import { resumeSchema } from "@/lib/resume/schema";
 import { scoreResume, topRecommendations } from "@/lib/resume/scoring";
 
@@ -8,8 +9,14 @@ interface PageProps {
 }
 
 export default async function ReviewPage({ params }: PageProps) {
+  const { userId } = await auth();
+  if (!userId) return null;
+
   const { resumeId } = await params;
-  const raw = resumeStore.get(resumeId);
+  const row = await prisma.resume.findFirst({
+    where: { id: resumeId, userId },
+  });
+  const raw = row?.data ?? null;
   const parsed = raw ? resumeSchema.safeParse(raw) : null;
   const resume = parsed?.success ? parsed.data : null;
 

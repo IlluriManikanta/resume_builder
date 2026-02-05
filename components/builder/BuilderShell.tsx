@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/Button";
 import { ExportButton } from "@/components/builder/ExportButton";
 import type { Resume } from "@/lib/resume/schema";
@@ -30,6 +31,9 @@ export function BuilderShell({
           <span className="text-sm text-gray-500">Editing: {resumeId}</span>
         </div>
         <div className="flex items-center gap-2">
+          {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+            <UserButton afterSignOutUrl="/" />
+          )}
           <Link
             href={`/resume/${resumeId}/review`}
             className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded font-medium hover:bg-gray-50"

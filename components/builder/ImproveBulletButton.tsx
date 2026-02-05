@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { AI_ENABLED } from "@/lib/config";
 
 interface ImproveBulletButtonProps {
   role: string;
@@ -10,6 +11,9 @@ interface ImproveBulletButtonProps {
   skills: string[];
   onImproved: (improvedBullet: string) => void;
 }
+
+const AI_DISABLED_TITLE =
+  "AI improvement disabled until OPENAI_API_KEY is configured.";
 
 export function ImproveBulletButton({
   role,
@@ -23,8 +27,8 @@ export function ImproveBulletButton({
   const [canUndo, setCanUndo] = useState(false);
 
   async function handleImprove() {
-    if (!bullet.trim()) {
-      alert("Please enter a bullet point first");
+    if (!AI_ENABLED || !bullet.trim()) {
+      if (!bullet.trim()) alert("Please enter a bullet point first");
       return;
     }
 
@@ -44,14 +48,19 @@ export function ImproveBulletButton({
         }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Failed to improve bullet");
+        const msg = data.error ?? "Failed to improve bullet";
+        if (data.error !== "OPENAI_API_KEY not set") {
+          console.error("Improve bullet error:", msg);
+        }
+        alert(msg);
+        setCanUndo(false);
+        return;
       }
 
-      const data = await res.json();
       const improved = data.improvedBullet || bullet;
-
       onImproved(improved);
       setCanUndo(true);
     } catch (err) {
@@ -72,7 +81,7 @@ export function ImproveBulletButton({
   }
 
   return (
-    <div className="flex gap-1 shrink-0">
+    <div className="flex gap-1 shrink-0 items-center">
       {canUndo && (
         <Button
           variant="secondary"
@@ -88,12 +97,20 @@ export function ImproveBulletButton({
         variant="secondary"
         type="button"
         onClick={handleImprove}
-        disabled={improving || !bullet.trim()}
+        disabled={!AI_ENABLED || improving || !bullet.trim()}
         className="text-xs py-1 px-2"
-        title="Improve this bullet with AI"
+        title={AI_ENABLED ? "Improve this bullet with AI" : AI_DISABLED_TITLE}
       >
         {improving ? "..." : "Improve"}
       </Button>
+      {!AI_ENABLED && (
+        <span
+          className="text-xs text-gray-500 whitespace-nowrap"
+          title={AI_DISABLED_TITLE}
+        >
+          AI improvement disabled until OPENAI_API_KEY is configured.
+        </span>
+      )}
     </div>
   );
 }

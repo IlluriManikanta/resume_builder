@@ -7,19 +7,18 @@ Minimal working scaffold: create and edit a resume in the browser with in-memory
 ## Scope
 
 - **Pages**: Home, Dashboard, Builder (`/resume/[id]/builder`), Review (`/resume/[id]/review`)
-- **API**: `POST /api/resumes/create` (returns new `resumeId`), `GET/POST /api/resumes/[resumeId]` (in-memory store for now)
+- **API**: `POST /api/resumes/create` (returns new `resumeId`), `GET/POST /api/resumes/[resumeId]` (Postgres via Prisma)
 - **Editor**: Left panel = section editors (contact, summary, skills); right panel = live preview
-- **Save**: POST resume JSON to `/api/resumes/[resumeId]`; stored in memory (no DB required to run)
+- **Save**: POST resume JSON to `/api/resumes/[resumeId]`; stored in Postgres (see `docs/database.md`)
 
 ## Tech
 
 - Next.js 14 App Router, TypeScript, TailwindCSS
 - Zod for resume schema and types
-- Prisma schema present; DB calls stubbed (in-memory map used instead until DB is connected)
+- Prisma + Postgres for resume persistence
 
 ## Next steps (post-MVP)
 
-- Connect Prisma to Postgres and persist resumes
 - Auth (e.g. NextAuth)
 - PDF export
 - AI suggestions (optional)
