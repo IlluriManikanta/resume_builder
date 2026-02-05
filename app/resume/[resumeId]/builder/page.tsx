@@ -34,6 +34,7 @@ export default function BuilderPage() {
   return (
     <BuilderShell
       resumeId={resumeId}
+      resume={resume}
       onSave={handleSave}
       left={
         <SectionEditors resume={resume} onChange={setResume} />

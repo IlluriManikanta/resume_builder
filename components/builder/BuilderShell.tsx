@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { ExportButton } from "@/components/builder/ExportButton";
+import type { Resume } from "@/lib/resume/schema";
 
 interface BuilderShellProps {
   resumeId: string;
+  resume: Resume | null;
   onSave: () => void | Promise<void>;
   left: React.ReactNode;
   right: React.ReactNode;
@@ -12,6 +15,7 @@ interface BuilderShellProps {
 
 export function BuilderShell({
   resumeId,
+  resume,
   onSave,
   left,
   right,
@@ -25,7 +29,10 @@ export function BuilderShell({
           </Link>
           <span className="text-sm text-gray-500">Editing: {resumeId}</span>
         </div>
-        <Button onClick={() => onSave()}>Save</Button>
+        <div className="flex items-center gap-2">
+          {resume && <ExportButton resume={resume} />}
+          <Button onClick={() => onSave()}>Save</Button>
+        </div>
       </header>
       <div className="flex-1 flex min-h-0">
         <aside className="w-1/2 border-r border-gray-200 overflow-auto p-4 bg-gray-50">

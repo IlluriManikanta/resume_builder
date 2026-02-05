@@ -4,6 +4,8 @@ export const defaultResume: Resume = {
   name: "Jane Doe",
   email: "jane@example.com",
   phone: "+1 (555) 123-4567",
+  linkedin: "linkedin.com/in/janedoe",
+  github: "github.com/janedoe",
   summary:
     "Experienced software engineer with 5+ years building web applications. Passionate about clean code and user experience.",
   experience: [
@@ -33,6 +35,16 @@ export const defaultResume: Resume = {
       ],
     },
   ],
+  projects: [
+    {
+      id: "proj-1",
+      name: "Resume Builder",
+      bullets: [
+        "Built full-stack Next.js app with real-time preview.",
+        "Used Zod for schema validation.",
+      ],
+    },
+  ],
   education: [
     {
       id: "edu-1",
@@ -40,6 +52,7 @@ export const defaultResume: Resume = {
       degree: "B.S.",
       field: "Computer Science",
       location: "Boston, MA",
+      startDate: "2014",
       endDate: "2018",
     },
   ],
