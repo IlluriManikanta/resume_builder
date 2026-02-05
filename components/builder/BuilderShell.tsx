@@ -30,6 +30,12 @@ export function BuilderShell({
           <span className="text-sm text-gray-500">Editing: {resumeId}</span>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/resume/${resumeId}/review`}
+            className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded font-medium hover:bg-gray-50"
+          >
+            Review score
+          </Link>
           {resume && <ExportButton resume={resume} />}
           <Button onClick={() => onSave()}>Save</Button>
         </div>
