@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { buildImproveBulletPrompt } from "@/lib/ai/prompts";
+import { checkAndIncrement } from "@/lib/rateLimit";
 
 const requestSchema = z.object({
   role: z.string(),
@@ -11,6 +13,24 @@ const requestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Sign in to use AI improvement." }, { status: 401 });
+    }
+
+    const result = await checkAndIncrement(userId, "ai_improve");
+    if (!result.allowed) {
+      return NextResponse.json(
+        {
+          error: "Daily limit reached for AI improvement.",
+          limit: result.limit,
+          current: result.current,
+          retryAfter: "tomorrow",
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = requestSchema.safeParse(body);
 

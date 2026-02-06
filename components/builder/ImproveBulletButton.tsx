@@ -25,6 +25,7 @@ export function ImproveBulletButton({
   const [improving, setImproving] = useState(false);
   const [previousBullet, setPreviousBullet] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
 
   async function handleImprove() {
     if (!AI_ENABLED || !bullet.trim()) {
@@ -35,6 +36,7 @@ export function ImproveBulletButton({
     setImproving(true);
     setPreviousBullet(bullet);
     setCanUndo(false);
+    setRateLimitMessage(null);
 
     try {
       const res = await fetch("/api/ai/improve-bullet", {
@@ -49,6 +51,21 @@ export function ImproveBulletButton({
       });
 
       const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        const msg =
+          data.error ??
+          "Daily limit reached for AI improvement.";
+        const detail =
+          data.retryAfter === "tomorrow"
+            ? " You can try again tomorrow."
+            : data.limit != null
+              ? ` Limit: ${data.limit} per day.`
+              : "";
+        setRateLimitMessage(msg + detail);
+        setCanUndo(false);
+        return;
+      }
 
       if (!res.ok) {
         const msg = data.error ?? "Failed to improve bullet";
@@ -81,35 +98,42 @@ export function ImproveBulletButton({
   }
 
   return (
-    <div className="flex gap-1 shrink-0 items-center">
-      {canUndo && (
+    <div className="flex flex-col gap-1 shrink-0">
+      <div className="flex gap-1 items-center">
+        {canUndo && (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={handleUndo}
+            className="text-xs py-1 px-2"
+            title="Undo improvement"
+          >
+            Undo
+          </Button>
+        )}
         <Button
           variant="secondary"
           type="button"
-          onClick={handleUndo}
+          onClick={handleImprove}
+          disabled={!AI_ENABLED || improving || !bullet.trim()}
           className="text-xs py-1 px-2"
-          title="Undo improvement"
+          title={AI_ENABLED ? "Improve this bullet with AI" : AI_DISABLED_TITLE}
         >
-          Undo
+          {improving ? "..." : "Improve"}
         </Button>
-      )}
-      <Button
-        variant="secondary"
-        type="button"
-        onClick={handleImprove}
-        disabled={!AI_ENABLED || improving || !bullet.trim()}
-        className="text-xs py-1 px-2"
-        title={AI_ENABLED ? "Improve this bullet with AI" : AI_DISABLED_TITLE}
-      >
-        {improving ? "..." : "Improve"}
-      </Button>
-      {!AI_ENABLED && (
-        <span
-          className="text-xs text-gray-500 whitespace-nowrap"
-          title={AI_DISABLED_TITLE}
-        >
-          AI improvement disabled until OPENAI_API_KEY is configured.
-        </span>
+        {!AI_ENABLED && (
+          <span
+            className="text-xs text-gray-500 whitespace-nowrap"
+            title={AI_DISABLED_TITLE}
+          >
+            AI improvement disabled until OPENAI_API_KEY is configured.
+          </span>
+        )}
+      </div>
+      {rateLimitMessage && (
+        <p className="text-xs text-amber-700" role="alert">
+          {rateLimitMessage}
+        </p>
       )}
     </div>
   );
