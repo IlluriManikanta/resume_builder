@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/builder/ExportButton";
 import type { Resume } from "@/lib/resume/schema";
 

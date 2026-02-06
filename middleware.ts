@@ -10,7 +10,10 @@ export default clerkMiddleware(async (auth, req) => {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return NextResponse.next();
   }
-  if (isProtectedRoute(req)) await auth.protect();
+  if (isProtectedRoute(req)) {
+    await auth.protect({ unauthenticatedUrl: "/sign-in" });
+  }
+  return NextResponse.next();
 });
 
 export const config = {

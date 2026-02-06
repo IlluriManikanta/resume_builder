@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { DashboardHeader } from "@/components/dashboard/header";
+import { ProgressCard } from "@/components/dashboard/progress-card";
+import { KpiStrip } from "@/components/dashboard/kpi-strip";
+import { Insights } from "@/components/dashboard/insights";
+import { ActionCards } from "@/components/dashboard/action-cards";
+import { Widgets } from "@/components/dashboard/widgets";
+import { RecentDocuments } from "@/components/dashboard/recent-documents";
 
 interface ResumeItem {
   id: string;
@@ -27,16 +33,16 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleNewResume() {
+  async function handleCreateResume() {
     setCreating(true);
     try {
-      if (resumes.length >= 1) {
-        router.push(`/resume/${resumes[0].id}/builder`);
-        return;
-      }
       const res = await fetch("/api/resumes/create", { method: "POST" });
       const data = await res.json();
       if (data.resumeId) {
+        setResumes((prev) => [
+          { id: data.resumeId, title: "Untitled Resume", updatedAt: new Date().toISOString() },
+          ...prev,
+        ]);
         router.push(`/resume/${data.resumeId}/builder`);
       } else {
         const err = await res.json().catch(() => ({}));
@@ -47,37 +53,46 @@ export default function DashboardPage() {
     }
   }
 
-  return (
-    <main className="min-h-screen p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
-          <UserButton afterSignOutUrl="/" />
-        )}
-      </div>
-      <p className="mb-6 text-gray-600">Manage your resume.</p>
+  const resumeId = resumes[0]?.id ?? null;
 
-      {loading ? (
-        <p className="text-gray-500">Loading…</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <button
-            onClick={handleNewResume}
-            disabled={creating}
-            className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {creating ? "Opening…" : resumes.length >= 1 ? "Open my resume" : "New Resume"}
-          </button>
-          {resumes.length >= 1 && (
-            <p className="text-sm text-gray-500">
-              MVP: one resume per account. Click above to edit.
-            </p>
-          )}
-          <Link href="/" className="w-fit text-gray-600 hover:underline">
-            Back home
-          </Link>
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#252422]">
+        <p className="text-[#CCC5B9]">Loading…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-[#252422]">
+      <DashboardSidebar />
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-5xl px-6 py-8 lg:px-10">
+          <DashboardHeader
+            onCreateResume={handleCreateResume}
+            creating={creating}
+          />
+
+          <div className="mt-8 flex flex-col gap-6">
+            <ProgressCard />
+            <KpiStrip
+              resumeCount={resumes.length}
+              reviewCount={resumes.length}
+              avgScore={resumes.length > 0 ? 85 : null}
+            />
+            <Insights />
+            <ActionCards
+              onCreateResume={handleCreateResume}
+              resumeId={resumeId}
+              creating={creating}
+            />
+            <Widgets resumeId={resumeId} />
+            <RecentDocuments resumes={resumes} />
+          </div>
         </div>
-      )}
-    </main>
+      </main>
+    </div>
   );
 }
