@@ -62,7 +62,7 @@ export function SignInCard() {
     }
     await signIn.authenticateWithRedirect({
       strategy,
-      redirectUrl: "/sign-in",
+      redirectUrl: "/sign-in/sso-callback",
       redirectUrlComplete: "/dashboard",
     });
   }
