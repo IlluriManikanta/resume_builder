@@ -30,7 +30,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans antialiased">
         {clerkPubKey ? (
-          <ClerkProvider publishableKey={clerkPubKey}>{children}</ClerkProvider>
+          <ClerkProvider
+            publishableKey={clerkPubKey}
+            signInForceRedirectUrl="/dashboard"
+            signUpForceRedirectUrl="/dashboard"
+          >
+            {children}
+          </ClerkProvider>
         ) : (
           children
         )}
