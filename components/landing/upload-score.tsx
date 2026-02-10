@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +22,16 @@ const scoreSets = [
 ];
 
 export function UploadScore() {
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
   const [setIndex, setSetIndex] = useState(0);
   const scores = scoreSets[setIndex];
+
+  async function handleForceSignIn() {
+    if (isSignedIn) await signOut();
+    router.push("/sign-in");
+  }
   const overall = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
   useEffect(() => {
@@ -81,14 +90,13 @@ export function UploadScore() {
 
           <div className="mt-10 text-center">
             <Button
-              asChild
+              type="button"
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-accent"
+              onClick={handleForceSignIn}
             >
-              <Link href="/dashboard">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Resume
-              </Link>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Resume
             </Button>
           </div>
         </div>

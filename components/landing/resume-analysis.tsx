@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -59,6 +60,15 @@ function AnimatedScoreRing() {
 }
 
 export function ResumeAnalysis() {
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+
+  async function handleForceSignIn() {
+    if (isSignedIn) await signOut();
+    router.push("/sign-in");
+  }
+
   return (
     <section id="analysis" className="bg-background px-6 py-20 md:py-28">
       <div className="mx-auto max-w-6xl">
@@ -123,8 +133,13 @@ export function ResumeAnalysis() {
         </div>
 
         <div className="mt-12 text-center">
-          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-accent">
-            <Link href="/dashboard">Analyze My Resume</Link>
+          <Button
+            type="button"
+            size="lg"
+            className="bg-primary text-primary-foreground hover:bg-accent"
+            onClick={handleForceSignIn}
+          >
+            Analyze My Resume
           </Button>
         </div>
       </div>

@@ -10,6 +10,7 @@ interface BuilderShellProps {
   resumeId: string;
   resume: Resume | null;
   onSave: () => void | Promise<void>;
+  loaded?: boolean;
   left: React.ReactNode;
   right: React.ReactNode;
 }
@@ -18,6 +19,7 @@ export function BuilderShell({
   resumeId,
   resume,
   onSave,
+  loaded = true,
   left,
   right,
 }: BuilderShellProps) {
@@ -41,7 +43,9 @@ export function BuilderShell({
             Review score
           </Link>
           {resume && <ExportButton resume={resume} />}
-          <Button onClick={() => onSave()}>Save</Button>
+          <Button onClick={() => onSave()} disabled={!loaded}>
+            Save
+          </Button>
         </div>
       </header>
       <div className="flex-1 flex min-h-0">

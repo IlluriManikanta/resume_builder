@@ -3,7 +3,7 @@ import { FileText, Mail, Sparkles, Target } from "lucide-react";
 interface KpiStripProps {
   resumeCount?: number;
   reviewCount?: number;
-  avgScore?: number | null;
+  avgScore?: number | "unscored" | null;
 }
 
 export function KpiStrip({
@@ -11,14 +11,18 @@ export function KpiStrip({
   reviewCount = 0,
   avgScore = null,
 }: KpiStripProps) {
+  const scoreValue =
+    avgScore === null ? "--" : avgScore === "unscored" ? "Unscored" : String(avgScore);
+  const scoreSuffix = typeof avgScore === "number" ? "/ 100" : "";
+
   const stats = [
     { label: "Resumes", value: String(resumeCount), icon: FileText },
     { label: "Cover Letters", value: "0", icon: Mail },
     { label: "Reviews", value: String(reviewCount), icon: Sparkles },
     {
       label: "Avg Score",
-      value: avgScore !== null ? String(avgScore) : "--",
-      suffix: avgScore !== null ? "/ 100" : "",
+      value: scoreValue,
+      suffix: scoreSuffix,
       icon: Target,
     },
   ];

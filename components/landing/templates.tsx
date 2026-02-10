@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const templateStyles = [
@@ -119,12 +118,13 @@ export function Templates() {
 
         <div className="mt-12 text-center">
           <Button
-            asChild
+            type="button"
             size="lg"
             variant="outline"
             className="border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:text-primary"
+            disabled
           >
-            <Link href="/dashboard">View Templates</Link>
+            View Templates
           </Button>
         </div>
       </div>

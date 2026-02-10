@@ -1,5 +1,8 @@
+"use client";
+
 import { Shield, CreditCard, Clock } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 const trustItems = [
@@ -9,6 +12,15 @@ const trustItems = [
 ];
 
 export function Hero() {
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+
+  async function handleForceSignIn() {
+    if (isSignedIn) await signOut();
+    router.push("/sign-in");
+  }
+
   return (
     <section
       className="relative overflow-hidden px-6 pb-24 pt-20 md:pb-32 md:pt-28"
@@ -38,11 +50,12 @@ export function Hero() {
 
         <div className="mt-10">
           <Button
-            asChild
+            type="button"
             size="lg"
             className="h-14 rounded-xl bg-primary px-10 text-base font-semibold text-primary-foreground shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all hover:bg-accent hover:shadow-[0_0_60px_rgba(37,99,235,0.6)]"
+            onClick={handleForceSignIn}
           >
-            <Link href="/sign-in">Start Free with ResVamp</Link>
+            Start Free with ResVamp
           </Button>
         </div>
 

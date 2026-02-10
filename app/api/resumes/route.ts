@@ -10,7 +10,7 @@ export async function GET() {
 
   const rows = await prisma.resume.findMany({
     where: { userId },
-    select: { id: true, title: true, updatedAt: true },
+    select: { id: true, title: true, updatedAt: true, score: true, scoredAt: true },
     orderBy: { updatedAt: "desc" },
   });
   return NextResponse.json({ resumes: rows });

@@ -24,8 +24,7 @@ export function ExportButton({ resume }: ExportButtonProps) {
 
       if (res.status === 429) {
         const data = await res.json().catch(() => ({}));
-        const msg =
-          data.error ?? "Daily limit reached for PDF export.";
+        const msg = data.error ?? "Daily limit reached for PDF export.";
         const detail =
           data.retryAfter === "tomorrow"
             ? " You can try again tomorrow."
@@ -39,7 +38,7 @@ export function ExportButton({ resume }: ExportButtonProps) {
       if (res.status === 503) {
         const data = await res.json().catch(() => ({}));
         setRateLimitMessage(
-          data.error ?? "PDF export is not available in this environment."
+          data.error ?? "PDF export is not available in this environment.",
         );
         return;
       }
@@ -66,11 +65,7 @@ export function ExportButton({ resume }: ExportButtonProps) {
 
   return (
     <div className="flex flex-col gap-1 items-end">
-      <Button
-        type="button"
-        onClick={handleExport}
-        disabled={exporting}
-      >
+      <Button type="button" onClick={handleExport} disabled={exporting}>
         {exporting ? "Exporting…" : "Export PDF"}
       </Button>
       {rateLimitMessage && (

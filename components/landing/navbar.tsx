@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
@@ -14,6 +16,17 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+
+  async function handleGetStartedFree() {
+    setMobileOpen(false);
+    if (isSignedIn) {
+      await signOut();
+    }
+    router.push("/sign-in");
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#403D39]/50 bg-[#252422]/90 backdrop-blur-xl">
@@ -38,9 +51,20 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden md:block">
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-accent">
-            <Link href="/sign-in">Get Started Free</Link>
+        <div className="hidden md:flex md:items-center md:gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="border-[#403D39] bg-transparent text-[#CCC5B9] hover:bg-[#403D39] hover:text-[#FFFCF2]"
+          >
+            <Link href={isSignedIn ? "/dashboard" : "/sign-in"}>Log in</Link>
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-accent"
+            onClick={handleGetStartedFree}
+          >
+            Get Started Free
           </Button>
         </div>
 
@@ -69,12 +93,24 @@ export function Navbar() {
               </li>
             ))}
           </ul>
-          <Button
-            asChild
-            className="mt-4 w-full bg-primary text-primary-foreground hover:bg-accent"
-          >
-            <Link href="/sign-in">Get Started Free</Link>
-          </Button>
+          <div className="mt-4 flex flex-col gap-2">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full border-[#403D39] bg-transparent text-[#CCC5B9] hover:bg-[#403D39] hover:text-[#FFFCF2]"
+            >
+              <Link href={isSignedIn ? "/dashboard" : "/sign-in"} onClick={() => setMobileOpen(false)}>
+                Log in
+              </Link>
+            </Button>
+            <Button
+              className="w-full bg-primary text-primary-foreground hover:bg-accent"
+              onClick={handleGetStartedFree}
+            >
+              Get Started Free
+            </Button>
+          </div>
         </div>
       )}
     </header>
