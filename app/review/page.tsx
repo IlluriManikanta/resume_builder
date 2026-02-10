@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { TopBar } from "@/components/dashboard/top-bar"
-import { ArrowLeft, Upload, FileText, Info } from "lucide-react"
+import { ArrowLeft, Upload, FileText } from "lucide-react"
 import {
   SavedResumeList,
   type ResumeItem,
@@ -14,6 +14,8 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null)
+  const [scoring, setScoring] = useState(false)
+  const [scoreError, setScoreError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/resumes")
@@ -24,6 +26,12 @@ export default function ReviewPage() {
       .catch(() => setResumes([]))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!loading && resumes.length > 0 && selectedResumeId === null) {
+      setSelectedResumeId(resumes[0].id)
+    }
+  }, [loading, resumes, selectedResumeId])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -56,6 +64,32 @@ export default function ReviewPage() {
 
   const selectedResume = resumes.find((r) => r.id === selectedResumeId)
 
+  const handleScoreResume = useCallback(async () => {
+    if (!selectedResumeId) return
+    setScoring(true)
+    setScoreError(null)
+    try {
+      const res = await fetch(`/api/resumes/${selectedResumeId}/score`, {
+        method: "POST",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setScoreError(data.error ?? "Failed to score resume")
+        return
+      }
+      const { score, scoredAt } = data
+      setResumes((prev) =>
+        prev.map((r) =>
+          r.id === selectedResumeId ? { ...r, score, scoredAt } : r
+        )
+      )
+    } catch {
+      setScoreError("Failed to score resume")
+    } finally {
+      setScoring(false)
+    }
+  }, [selectedResumeId])
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <TopBar />
@@ -78,20 +112,6 @@ export default function ReviewPage() {
               Upload a resume or select one from your saved documents to get a
               score.
             </p>
-          </div>
-
-          {/* Coming Soon Notice */}
-          <div className="mb-6 flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-            <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Coming Soon
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Scoring functionality is under development. You can preview the
-                UI and select a resume.
-              </p>
-            </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -139,7 +159,10 @@ export default function ReviewPage() {
                   resumes={resumes}
                   loading={loading}
                   onDelete={handleDelete}
-                  onSelect={setSelectedResumeId}
+                  onSelect={(id) => {
+                    setSelectedResumeId(id)
+                    setScoreError(null)
+                  }}
                   selectedId={selectedResumeId}
                   variant="compact"
                   maxHeight="400px"
@@ -160,13 +183,35 @@ export default function ReviewPage() {
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {selectedResume.title || "Untitled Resume"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Selected for scoring
                         </p>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          {selectedResume.score !== null ? (
+                            <>
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                                Score: {selectedResume.score}
+                              </span>
+                              {selectedResume.scoredAt && (
+                                <span>
+                                  Scored {new Date(selectedResume.scoredAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="rounded-full bg-muted px-2 py-0.5">
+                              Unscored
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center py-8">
@@ -176,18 +221,23 @@ export default function ReviewPage() {
                         </span>
                       </div>
                       <p className="mt-4 text-sm font-medium text-foreground">
-                        Scoring coming soon
+                        Rules-based scoring for structure and bullet quality
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground text-center max-w-[200px]">
-                        We&apos;ll analyze your resume and provide actionable
-                        feedback.
+                        Click Score Resume to analyze this resume.
                       </p>
                     </div>
+                    {scoreError && (
+                      <p className="text-sm text-destructive mb-2" role="alert">
+                        {scoreError}
+                      </p>
+                    )}
                     <button
-                      disabled
-                      className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground opacity-50 cursor-not-allowed"
+                      onClick={handleScoreResume}
+                      disabled={scoring}
+                      className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Score Resume (Coming Soon)
+                      {scoring ? "Scoring…" : "Score Resume"}
                     </button>
                   </>
                 ) : (
