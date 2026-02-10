@@ -20,7 +20,7 @@ export async function GET(
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json(row.data);
+  return NextResponse.json({ data: row.data, title: row.title ?? "Untitled Resume" });
 }
 
 export async function POST(
@@ -59,6 +59,40 @@ export async function POST(
       score: overall,
       scoredAt: now,
     },
+  });
+  return NextResponse.json({ ok: true });
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ resumeId: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { resumeId } = await params;
+  const row = await prisma.resume.findFirst({
+    where: { id: resumeId, userId },
+  });
+  if (!row) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const body = await request.json();
+  const title =
+    typeof body?.title === "string" ? body.title.trim() : undefined;
+  if (title === undefined) {
+    return NextResponse.json(
+      { error: "Missing or invalid title" },
+      { status: 400 }
+    );
+  }
+
+  await prisma.resume.update({
+    where: { id: resumeId },
+    data: { title: title || "Untitled Resume" },
   });
   return NextResponse.json({ ok: true });
 }

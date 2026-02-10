@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { defaultResume } from "@/lib/resume/defaults";
 import { resumeSchema } from "@/lib/resume/schema";
@@ -12,12 +12,17 @@ import { SectionEditors } from "@/components/builder/SectionEditors";
 
 export default function BuilderPage() {
   const params = useParams();
+  const router = useRouter();
   const resumeId = String(params.resumeId);
-  const [resume, setResume] = useState<Resume | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isDraft = resumeId === "new";
+
+  const [resume, setResume] = useState<Resume | null>(isDraft ? { ...defaultResume } : null);
+  const [documentTitle, setDocumentTitle] = useState<string>("Untitled Resume");
+  const [loading, setLoading] = useState(!isDraft);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isDraft) return;
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
@@ -36,7 +41,10 @@ export default function BuilderPage() {
           setLoadError("Failed to load resume.");
           return null;
         }
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.data !== undefined ? json.data : json;
+        const title = json.title ?? "Untitled Resume";
+        setDocumentTitle(typeof title === "string" ? title : "Untitled Resume");
         const parsed = resumeSchema.safeParse(data);
         if (parsed.success) {
           setResume({ ...defaultResume, ...parsed.data, id: resumeId });
@@ -46,7 +54,8 @@ export default function BuilderPage() {
         return null;
       })
       .catch(() => {
-        if (!cancelled) setLoadError("Failed to load resume. Check your connection.");
+        if (!cancelled)
+          setLoadError("Failed to load resume. Check your connection.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -54,15 +63,47 @@ export default function BuilderPage() {
     return () => {
       cancelled = true;
     };
-  }, [resumeId]);
+  }, [resumeId, isDraft]);
 
-  async function handleSave() {
-    if (!resume || loading || loadError) return;
-    await fetch(`/api/resumes/${resumeId}`, {
+  const handleTitleChange = useCallback(
+    async (newTitle: string) => {
+      const value = newTitle.trim() || "Untitled Resume";
+      setDocumentTitle(value);
+      if (isDraft) return;
+      const previousTitle = documentTitle;
+      const res = await fetch(`/api/resumes/${resumeId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: value }),
+      });
+      if (!res.ok) {
+        setDocumentTitle(previousTitle);
+      }
+    },
+    [resumeId, documentTitle, isDraft],
+  );
+
+  async function handleSave(): Promise<boolean> {
+    if (!resume || loading || loadError) return false;
+    if (isDraft) {
+      const res = await fetch("/api/resumes/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: resume, title: documentTitle }),
+      });
+      const result = await res.json();
+      if (result.resumeId) {
+        router.replace(`/resume/${result.resumeId}/builder`);
+        return true;
+      }
+      return false;
+    }
+    const res = await fetch(`/api/resumes/${resumeId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(resume),
     });
+    return res.ok;
   }
 
   const loaded = Boolean(!loading && !loadError && resume);
@@ -97,8 +138,11 @@ export default function BuilderPage() {
     <BuilderShell
       resumeId={resumeId}
       resume={resume}
+      documentTitle={documentTitle}
+      onTitleChange={handleTitleChange}
       onSave={handleSave}
       loaded={loaded}
+      isDraft={isDraft}
       left={
         <fieldset disabled={!loaded} className="border-0 p-0 m-0 min-w-0">
           <SectionEditors resume={resume} onChange={setResume} />

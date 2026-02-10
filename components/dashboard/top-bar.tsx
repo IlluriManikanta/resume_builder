@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { UserButton } from "@clerk/nextjs"
+import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
+import { Sparkles } from "lucide-react";
 
 export function TopBar() {
   return (
@@ -19,7 +20,15 @@ export function TopBar() {
             avatarBox: "h-8 w-8",
           },
         }}
-      />
+      >
+        <UserButton.MenuItems>
+          <UserButton.Link
+            label="Upgrade to Pro"
+            labelIcon={<Sparkles className="h-4 w-4" />}
+            href="/#pricing"
+          />
+        </UserButton.MenuItems>
+      </UserButton>
     </header>
-  )
+  );
 }

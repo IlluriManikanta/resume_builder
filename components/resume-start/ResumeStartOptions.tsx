@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { FileText, LayoutGrid } from "lucide-react"
 import {
@@ -44,24 +43,9 @@ const options: Array<{
 
 export function ResumeStartOptions() {
   const router = useRouter()
-  const [creating, setCreating] = useState(false)
 
-  async function handleBlankResume() {
-    if (creating) return
-    setCreating(true)
-    try {
-      const res = await fetch("/api/resumes/create", { method: "POST" })
-      const data = await res.json()
-      if (data.resumeId) {
-        router.push(`/resume/${data.resumeId}/builder`)
-      } else {
-        alert(data.error ?? "Failed to create resume")
-      }
-    } catch {
-      alert("Failed to create resume. Please try again.")
-    } finally {
-      setCreating(false)
-    }
+  function handleBlankResume() {
+    router.push("/resume/new/builder")
   }
 
   return (
@@ -113,7 +97,7 @@ export function ResumeStartOptions() {
             <Button
               className="w-full"
               variant={option.enabled ? "default" : "secondary"}
-              disabled={!option.enabled || (option.id === "blank" && creating)}
+              disabled={!option.enabled}
               onClick={
                 option.id === "blank" && option.enabled
                   ? (e) => {
@@ -123,9 +107,7 @@ export function ResumeStartOptions() {
                   : undefined
               }
             >
-              {option.id === "blank" && creating
-                ? "Creating…"
-                : option.buttonLabel}
+              {option.buttonLabel}
             </Button>
           </CardFooter>
         </Card>
