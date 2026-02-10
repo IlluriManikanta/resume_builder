@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { AI_ENABLED } from "@/lib/config";
 
 interface ImproveBulletButtonProps {
   role: string;
@@ -22,13 +21,23 @@ export function ImproveBulletButton({
   skills,
   onImproved,
 }: ImproveBulletButtonProps) {
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiStatusLoading, setAiStatusLoading] = useState(true);
   const [improving, setImproving] = useState(false);
   const [previousBullet, setPreviousBullet] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetch("/api/ai/status")
+      .then((res) => (res.ok ? res.json() : { enabled: false }))
+      .then((data) => setAiEnabled(Boolean(data?.enabled)))
+      .catch(() => setAiEnabled(false))
+      .finally(() => setAiStatusLoading(false));
+  }, []);
+
   async function handleImprove() {
-    if (!AI_ENABLED || !bullet.trim()) {
+    if (!aiEnabled || !bullet.trim()) {
       if (!bullet.trim()) alert("Please enter a bullet point first");
       return;
     }
@@ -115,13 +124,13 @@ export function ImproveBulletButton({
           variant="secondary"
           type="button"
           onClick={handleImprove}
-          disabled={!AI_ENABLED || improving || !bullet.trim()}
+          disabled={aiStatusLoading || !aiEnabled || improving || !bullet.trim()}
           className="text-xs py-1 px-2"
-          title={AI_ENABLED ? "Improve this bullet with AI" : AI_DISABLED_TITLE}
+          title={aiEnabled ? "Improve this bullet with AI" : AI_DISABLED_TITLE}
         >
           {improving ? "..." : "Improve"}
         </Button>
-        {!AI_ENABLED && (
+        {!aiStatusLoading && !aiEnabled && (
           <span
             className="text-xs text-gray-500 whitespace-nowrap"
             title={AI_DISABLED_TITLE}

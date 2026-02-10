@@ -37,9 +37,8 @@ In **Vercel → Project → Settings → Environment Variables**, add:
 | `DATABASE_URL` | Yes | Postgres connection string from Neon or Supabase |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | From [Clerk Dashboard](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | Yes | From Clerk Dashboard (secret) |
-| `OPENAI_API_KEY` | No | For AI bullet improvement |
-| `NEXT_PUBLIC_AI_ENABLED` | No | Set to `true` if using OpenAI |
-| `RATE_LIMIT_AI_IMPROVE_PER_DAY` | No | Default 20 |
+| `OPENAI_API_KEY` | No | For AI bullet improvement (server-side only, never exposed). When set, Improve works for all signed-in users. |
+| `RATE_LIMIT_AI_IMPROVE_PER_DAY` | No | Default 20 (per user per day) |
 | `RATE_LIMIT_PDF_EXPORT_PER_DAY` | No | Default 30 |
 
 Apply to **Production**, **Preview**, and **Development** as needed.

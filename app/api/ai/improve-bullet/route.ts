@@ -74,10 +74,11 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error("OpenAI API error:", errorData);
+      const message = errorData?.error?.message ?? "AI service error";
+      console.error("OpenAI API error:", message);
       return NextResponse.json(
-        { error: "AI service error", details: errorData },
-        { status: response.status }
+        { error: "AI service error. Please try again." },
+        { status: 502 }
       );
     }
 
