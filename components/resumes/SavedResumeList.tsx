@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
-import { FileText, Loader2, Trash2, CheckCircle2 } from "lucide-react"
+import { FileText, Loader2, Trash2, CheckCircle2, Search } from "lucide-react"
+import { Input } from "@/components/ui/Input"
 
 export interface ResumeItem {
   id: string
@@ -42,6 +43,18 @@ export function SavedResumeList({
   variant = "card",
 }: SavedResumeListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const filteredResumes = useMemo(() => {
+    if (!searchQuery.trim()) return resumes
+    const q = searchQuery.trim().toLowerCase()
+    return resumes.filter((r) =>
+      (r.title || "Untitled Resume").toLowerCase().includes(q)
+    )
+  }, [resumes, searchQuery])
+
+  const hasResumes = resumes.length > 0
+  const hasNoMatches = hasResumes && filteredResumes.length === 0
 
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -85,14 +98,44 @@ export function SavedResumeList({
     )
   }
 
+  const searchInput = (
+    <div className="relative mb-4">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder="Search resumes by title…"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pl-9 border-border/60 bg-card/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+        aria-label="Search resumes by title"
+      />
+    </div>
+  )
+
+  if (hasNoMatches) {
+    return (
+      <div>
+        {searchInput}
+        <div className="rounded-xl border border-border/60 bg-card/50 p-6 text-center">
+          <FileText className="mx-auto h-8 w-8 text-muted-foreground/50" />
+          <p className="mt-2 text-sm text-muted-foreground">
+            No resumes match your search.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Compact variant (for /review page style)
   if (variant === "compact") {
     return (
-      <div
-        className="space-y-2 overflow-y-auto"
-        style={{ maxHeight }}
-      >
-        {resumes.map((resume) => {
+      <div>
+        {searchInput}
+        <div
+          className="space-y-2 overflow-y-auto"
+          style={{ maxHeight }}
+        >
+          {filteredResumes.map((resume) => {
           const isSelected = selectedId === resume.id
           const isDeleting = deletingId === resume.id
 
@@ -189,18 +232,21 @@ export function SavedResumeList({
               </button>
             </div>
           )
-        })}
+          })}
+        </div>
       </div>
     )
   }
 
   // Card variant (for /resumes page style)
   return (
-    <div className="space-y-3" style={{ maxHeight, overflowY: "auto" }}>
-      {resumes.map((resume) => {
-        const isDeleting = deletingId === resume.id
+    <div>
+      {searchInput}
+      <div className="space-y-3 overflow-y-auto" style={{ maxHeight }}>
+        {filteredResumes.map((resume) => {
+          const isDeleting = deletingId === resume.id
 
-        return (
+          return (
           <div
             key={resume.id}
             className="flex items-center justify-between rounded-xl border border-border/60 bg-card/80 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_0_20px_-4px] hover:shadow-primary/20"
@@ -249,8 +295,9 @@ export function SavedResumeList({
               </button>
             </div>
           </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
