@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { buildImproveBulletPrompt } from "@/lib/ai/prompts";
+import { getImproveBulletMessages } from "@/lib/ai/prompts";
 import { checkAndIncrement } from "@/lib/rateLimit";
 
 const requestSchema = z.object({
@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = buildImproveBulletPrompt({ role, company, bullet, skills });
+    // System/user message split for better constraint adherence
+    const messages = getImproveBulletMessages({ role, company, bullet, skills });
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -61,12 +62,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+        messages,
         temperature: 0.7,
         max_tokens: 150,
       }),

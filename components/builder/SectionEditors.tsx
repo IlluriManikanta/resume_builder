@@ -488,20 +488,66 @@ function SkillsEditor({
   );
 }
 
+// --- Summary ---
+function SummaryEditor({
+  resume,
+  onChange,
+}: {
+  resume: Resume;
+  onChange: (r: Resume) => void;
+}) {
+  const hasSummary = resume.summary !== undefined;
+
+  const addSummary = () => {
+    onChange(updateResume(resume, { summary: "" }));
+  };
+
+  const removeSummary = () => {
+    onChange(updateResume(resume, { summary: undefined }));
+  };
+
+  if (!hasSummary) {
+    return (
+      <Card>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Summary</h3>
+          <Button variant="secondary" onClick={addSummary} type="button">
+            Add summary
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold">Summary</h3>
+        <Button
+          variant="secondary"
+          type="button"
+          onClick={removeSummary}
+          className="text-red-600 hover:text-red-700 text-sm py-1 px-2"
+        >
+          Remove
+        </Button>
+      </div>
+      <Textarea
+        placeholder="Professional summary"
+        value={resume.summary}
+        onChange={(e) =>
+          onChange(updateResume(resume, { summary: e.target.value }))
+        }
+      />
+    </Card>
+  );
+}
+
 export function SectionEditors({ resume, onChange }: SectionEditorsProps) {
   return (
     <div className="space-y-4">
       <ContactEditor resume={resume} onChange={onChange} />
-      <Card>
-        <h3 className="font-semibold mb-3">Summary</h3>
-        <Textarea
-          placeholder="Professional summary"
-          value={resume.summary}
-          onChange={(e) =>
-            onChange(updateResume(resume, { summary: e.target.value }))
-          }
-        />
-      </Card>
+      <SummaryEditor resume={resume} onChange={onChange} />
       <ExperienceEditor resume={resume} onChange={onChange} />
       <ProjectsEditor resume={resume} onChange={onChange} />
       <EducationEditor resume={resume} onChange={onChange} />
